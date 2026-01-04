@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brief</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #090214;
+            --bg-gradient: radial-gradient(circle at 50% 50%, #1f1033 0%, #090214 100%);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --gold: #cfaa6e;
+            --gold-glow: #e6c891;
+            --text-main: #e0e0e0;
+            --card-back: #1a0f2e;
+            --danger: #ff5f5f;
+            --success: #4caf50;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg-dark);
+            background-image: var(--bg-gradient);
+            color: var(--text-main);
+            font-family: 'Lato', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1, h2, h3 { font-family: 'Cinzel', serif; color: var(--gold); }
+
+        /* --- NAV BAR --- */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 100;
+        }
+
+        .logo { font-size: 1.5rem; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 10px rgba(207, 170, 110, 0.3); }
+
+        .menu-btn {
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 8px 20px;
+            margin-left: 10px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Cinzel', serif;
+        }
+
+        .menu-btn:hover { background: var(--gold); color: var(--bg-dark); box-shadow: 0 0 15px var(--gold); }
+
+        /* --- MESA PRINCIPAL --- */
+        main {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* Deck Central (Animação Shuffle) */
+        #deck-stack {
+            position: absolute;
+            width: 140px;
+            height: 220px;
+            background: var(--card-back);
+            border: 2px solid var(--gold);
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            color: rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: 0.3s;
+            z-index: 10;
+        }
+
+        #deck-stack::before, #deck-stack::after {
+            content: ''; position: absolute; top: -5px; left: -5px;
+            width: 100%; height: 100%;
+            border: 2px solid var(--gold); border-radius: 10px;
+            background: var(--card-back); z-index: -1;
+        }
+        #deck-stack::before { transform: rotate(3deg); }
+        #deck-stack::after { transform: rotate(-3deg); }
+
+        .shuffling { animation: shuffleAnim 0.8s ease-in-out infinite; }
+
+        @keyframes shuffleAnim {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(-10px, 0) rotate(-5deg); }
+            50% { transform: translate(10px, 0) rotate(5deg); }
+            75% { transform: translate(-5px, 0) rotate(-2deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        /* Área das Cartas Distribuídas */
+        #spread-area {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        #spread-area.visible { opacity: 1; }
+
+        /* A Carta Individual */
+        .card {
+            width: 130px;
+            height: 220px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            transform-style: preserve-3d;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        }
+
+        .card.flipped .card-inner { transform: rotateY(180deg); }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid var(--gold);
+        }
+
+        .card-back {
+            background: var(--card-back);
+            background-image: repeating-linear-gradient(45deg, rgba(207, 170, 110, 0.05) 0px, rgba(207, 170, 110, 0.05) 2px, transparent 2px, transparent 10px);
+            color: var(--gold);
+            font-size: 2rem;
+        }
+
+        .card-front {
+            background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+            color: #222;
+            transform: rotateY(180deg);
+            padding: 10px;
+        }
+
+        .card-icon { font-size: 3.5rem; margin-bottom: 10px; }
+        .card-name { font-family: 'Cinzel', serif; font-weight: bold; font-size: 0.9rem; margin-bottom: 5px; color: #1a0f2e; }
+        .card-keyword { font-size: 0.7rem; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* --- MODAIS (Pop-ups) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+
+        .modal-box {
+            background: #1a0f2e;
+            border: 1px solid var(--gold);
+            width: 90%; max-width: 500px;
+            border-radius: 12px;
+            padding: 25px;
+            position: relative;
+            box-shadow: 0 0 40px rgba(207, 170, 110, 0.1);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .close-modal { position: absolute; top: 15px; right: 20px; background: none; border: none; color: #666; font-size: 1.5rem; cursor: pointer; }
+        .close-modal:hover { color: var(--gold); }
+
+        /* Estilos dentro dos Modais */
+        .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .setup-btn { background: rgba(255,255,255,0.05); border: 1px solid #444; color: #ccc; padding: 15px; cursor: pointer; border-radius: 8px; transition: 0.2s; }
+        .setup-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(207, 170, 110, 0.1); }
+        
+        .history-item { 
+            background: rgba(255,255,255,0.03); 
+            border-left: 3px solid var(--gold); 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            border-radius: 0 8px 8px 0;
+        }
+        .history-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.8rem; color: #888; }
+        .history-cards { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+        .mini-card { background: #eee; color: #222; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        
+        textarea.note-editor {
+            width: 100%; height: 80px;
+            background: rgba(0,0,0,0.3); border: 1px solid #444; color: #fff;
+            padding: 10px; border-radius: 5px; margin-top: 10px; resize: vertical;
+        }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; justify-content: flex-end; }
+        .btn-save { background: var(--gold); color: #000; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .btn-delete { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 8px 15px; cursor: pointer; border-radius: 4px; }
+        .btn-delete:hover { background: var(--danger); color: white; }
+
+        /* Card Detail Modal */
+        .detail-large-icon { font-size: 6rem; text-align: center; margin: 20px 0; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* Custom Input */
+        .custom-setup { grid-column: span 2; display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; }
+        .custom-setup input { background: transparent; border: 1px solid var(--gold); color: white; padding: 5px; width: 60px; text-align: center; }
+
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">Brief🃏</div>
+        <div>
+            <button class="menu-btn" onclick="openSetup()">Nova Leitura</button>
+            <button class="menu-btn" onclick="openHistory()">Histórico & Notas</button>
+        </div>
+    </nav>
+
+    <main>
+        <div id="deck-stack" onclick="openSetup()">
+            ☾
+        </div>
+
+        <div id="spread-area"></div>
+    </main>
+
+    <div id="modal-setup" class="modal-overlay">
+        <div class="modal-box">
+            <button class="close-modal" onclick="closeModal('modal-setup')">&times;</button>
+            <h2>Iniciar Leitura</h2>
+            <p style="color:#aaa; margin-top:5px;">Concentre-se em sua pergunta e escolha a tiragem.</p>
+            
+            <div class="setup-grid">
+                <button class="setup-btn" onclick="startShuffling(1)">
+                    <strong>Carta Única</strong><br><span style="font-size:0.8rem">Conselho Rápido</span>
+                </button>
+                <button class="setup-btn" onclick="startShuffling(3)">
+                    <strong>Três Tempos</strong><br><span style="font-size:0.8rem">Passado, Presente, Futuro</span>
+                </button>
+                <button class="setup-btn" onclick="startShuffling(5)">
+                    <strong>Estrela</strong><br><span style="font-size:0.8rem">5 Cartas</span>
+                </button>
+                
+                <div class="custom-setup">
+                    <label>Quantidade Personalizada:</label>
+                    <input type="number" id="custom-num" min="1" max="22" value="1">
+                    <button class="menu-btn" style="padding: 5px 15px;" onclick="startShuffling(document.getElementById('custom-num').value)">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-card" class="modal-overlay">
+        <div class="modal-box" style="text-align: center;">
+            <button class="close-modal" onclick="closeModal('modal-card')">&times;</button>
+            <h2 id="view-card-name" style="font-size: 1.8rem;"></h2>
+            <div id="view-card-icon" class="detail-large-icon"></div>
+            <p id="view-card-desc" style="line-height: 1.6; color: #ddd; margin-bottom: 20px;"></p>
+            <div style="font-style: italic; color: var(--gold); font-size: 0.9rem; margin-top: 10px;">
+                "A carta revelada traz a energia do momento."
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-history" class="modal-overlay">
+        <div class="modal-box" style="max-width: 600px;">
+            <button class="close-modal" onclick="closeModal('modal-history')">&times;</button>
+            <h2>Diário de Leituras</h2>
+            <p style="color:#aaa; margin-bottom: 20px;">Edite suas anotações ou reveja cartas passadas.</p>
+            
+            <div id="history-list">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DADOS DOS ARCANOS MAIORES ---
+        const tarotData = [
+            { id: 0, name: "O Louco", icon: "🤡", key: "Início", desc: "Novos começos, inocência, espontaneidade, espírito livre. Um salto de fé em direção ao desconhecido." },
+            { id: 1, name: "O Mago", icon: "🪄", key: "Poder", desc: "Manifestação, desenvoltura, poder, ação inspirada. Você tem os recursos necessários." },
+            { id: 2, name: "A Sacerdotisa", icon: "📜", key: "Intuição", desc: "Intuição, mistério sagrado, mente subconsciente, silêncio interior." },
+            { id: 3, name: "A Imperatriz", icon: "👑", key: "Fertilidade", desc: "Feminilidade, beleza, natureza, abundância, criação e gestação." },
+            { id: 4, name: "O Imperador", icon: "🤴", key: "Autoridade", desc: "Estrutura, controle, paternidade, estabilidade, regras e poder mundano." },
+            { id: 5, name: "O Hierofante", icon: "⛪", key: "Tradição", desc: "Conformidade, tradição, crenças, ensino, espiritualidade institucional." },
+            { id: 6, name: "Os Enamorados", icon: "❤", key: "Escolha", desc: "Amor, harmonia, relacionamentos, alinhamento de valores e grandes escolhas." },
+            { id: 7, name: "O Carro", icon: "🛒", key: "Vitória", desc: "Controle, força de vontade, sucesso, ação, determinação e direção." },
+            { id: 8, name: "A Força", icon: "🦁", key: "Coragem", desc: "Força interior, coragem, persuasão, influência, compaixão e paciência." },
+            { id: 9, name: "O Eremita", icon: "🕯", key: "Busca", desc: "Introspecção, estar sozinho, orientação interior, busca da verdade." },
+            { id: 10, name: "Roda da Fortuna", icon: "🎡", key: "Destino", desc: "Sorte, carma, ciclos de vida, destino, um ponto de viragem inevitável." },
+            { id: 11, name: "A Justiça", icon: "⚖", key: "Verdade", desc: "Justiça, imparcialidade, verdade, causa e efeito, lei e responsabilidade." },
+            { id: 12, name: "O Enforcado", icon: "🙃", key: "Sacrifício", desc: "Pausa, rendição, deixar ir, novas perspectivas através do sacrifício." },
+            { id: 13, name: "A Morte", icon: "💀", key: "Transformação", desc: "Fim, transição, eliminação do velho para o novo, mudança profunda." },
+            { id: 14, name: "A Temperança", icon: "⚗", key: "Equilíbrio", desc: "Equilíbrio, moderação, paciência, propósito, alquimia interior." },
+            { id: 15, name: "O Diabo", icon: "😈", key: "Apego", desc: "Sombra, materialismo, vício, sexualidade, sentir-se preso." },
+            { id: 16, name: "A Torre", icon: "⚡", key: "Ruptura", desc: "Mudança repentina, revolta, caos, revelação, destruição de estruturas falsas." },
+            { id: 17, name: "A Estrela", icon: "⭐", key: "Esperança", desc: "Esperança, fé, propósito, renovação, espiritualidade e cura." },
+            { id: 18, name: "A Lua", icon: "🌙", key: "Ilusão", desc: "Ilusão, medo, ansiedade, subconsciente, sonhos e intuição enganosa." },
+            { id: 19, name: "O Sol", icon: "☀", key: "Alegria", desc: "Positividade, diversão, calor, sucesso, vitalidade e clareza." },
+            { id: 20, name: "O Julgamento", icon: "🎺", key: "Renascimento", desc: "Julgamento, renascimento, chamado interior, absolvição e despertar." },
+            { id: 21, name: "O Mundo", icon: "🌍", key: "Conclusão", desc: "Conclusão, realização, viagem, totalidade e encerramento de um ciclo." },
+            { id: 22, name: "Ás de Paus", icon: "🪄", key: "Inspiração", desc: "Novas oportunidades, potencial criativo, entusiasmo e semente de ação." },
+    { id: 23, name: "Dois de Paus", icon: "🧭", key: "Planejamento", desc: "Decisão, visão de futuro, planejamento e exploração de novos horizontes." },
+    { id: 24, name: "Três de Paus", icon: "🚢", key: "Expansão", desc: "Progresso, expansão comercial, olhar para o futuro e resultados iniciais." },
+    { id: 25, name: "Quatro de Paus", icon: "🏰", key: "Celebração", desc: "Harmonia doméstica, celebração, alegria, estabilidade e retorno ao lar." },
+    { id: 26, name: "Cinco de Paus", icon: "⚔️", key: "Conflito", desc: "Competição, rivalidade, desentendimentos e desafios de egos." },
+    { id: 27, name: "Seis de Paus", icon: "🏇", key: "Vitória", desc: "Sucesso, reconhecimento público, orgulho e progresso recompensado." },
+    { id: 28, name: "Sete de Paus", icon: "🛡️", key: "Defesa", desc: "Resistência, proteção de território, coragem diante da oposição." },
+    { id: 29, name: "Oito de Paus", icon: "🏹", key: "Rapidez", desc: "Movimento rápido, notícias chegando, viagens e conclusão veloz." },
+    { id: 30, name: "Nove de Paus", icon: "🧱", key: "Persistência", desc: "Resiliência, última etapa, exaustão mas com força para continuar." },
+    { id: 31, name: "Dez de Paus", icon: "🪵", key: "Sobrecarga", desc: "Fardo, excesso de responsabilidade, cansaço e peso do dever." },
+    { id: 32, name: "Valete de Paus", icon: "🏃", key: "Mensagem", desc: "Novidades, curiosidade, mensageiro de ideias criativas." },
+    { id: 33, name: "Cavaleiro de Paus", icon: "🏇", key: "Impulso", desc: "Ação direta, aventura, pressa e determinação focada." },
+    { id: 34, name: "Rainha de Paus", icon: "🌻", key: "Confiança", desc: "Carisma, independência, calor humano e coragem vibrante." },
+    { id: 35, name: "Rei de Paus", icon: "🔥", key: "Liderança", desc: "Visão, empreendedorismo, autoridade inspiradora e honra." },
+
+    // NAIPE DE COPAS (Cups) - Elemento Água: Emoções, Relacionamentos
+    { id: 36, name: "Ás de Copas", icon: "🍷", key: "Amor", desc: "Novo sentimento, despertar emocional, intuição e transbordar de afeto." },
+    { id: 37, name: "Dois de Copas", icon: "🥂", key: "União", desc: "Parceria, atração mútua, compromisso e harmonia entre duas pessoas." },
+    { id: 38, name: "Três de Copas", icon: "🥳", key: "Amizade", desc: "Comunidade, celebração em grupo, apoio social e alegria compartilhada." },
+    { id: 39, name: "Quatro de Copas", icon: "😒", key: "Apatia", desc: "Tédio, introspecção excessiva, ignorar oportunidades e descontentamento." },
+    { id: 40, name: "Cinco de Copas", icon: "🥀", key: "Lamento", desc: "Tristeza, perda, foco no que deu errado e arrependimento." },
+    { id: 41, name: "Seis de Copas", icon: "🧒", key: "Nostalgia", desc: "Passado, memórias de infância, inocência e reencontros." },
+    { id: 42, name: "Sete de Copas", icon: "💭", key: "Escolhas", desc: "Ilusão, excesso de opções, sonhos e falta de foco na realidade." },
+    { id: 43, name: "Oito de Copas", icon: "🚶", key: "Partida", desc: "Deixar algo para trás, busca espiritual, abandonar o que não serve mais." },
+    { id: 44, name: "Nove de Copas", icon: "🥧", key: "Satisfação", desc: "Desejo realizado, contentamento, prazer e gratidão." },
+    { id: 45, name: "Dez de Copas", icon: "🌈", key: "Felicidade", desc: "Harmonia familiar, plenitude emocional e amor duradouro." },
+    { id: 46, name: "Valete de Copas", icon: "🐟", key: "Sensibilidade", desc: "Intuição jovem, notícias emocionais, convites e sonhos." },
+    { id: 47, name: "Cavaleiro de Copas", icon: "🦄", key: "Romantismo", desc: "Propostas, busca pelo ideal, cavalheirismo e convites românticos." },
+    { id: 48, name: "Rainha de Copas", icon: "🌊", key: "Empatia", desc: "Compadecimento, intuição aguçada, cuidado e estabilidade emocional." },
+    { id: 49, name: "Rei de Copas", icon: "👑", key: "Equilíbrio", desc: "Controle emocional, maturidade, conselheiro calmo e generosidade." },
+
+    // NAIPE DE ESPADAS (Swords) - Elemento Ar: Intelecto, Pensamento, Conflito
+    { id: 50, name: "Ás de Espadas", icon: "🗡️", key: "Clareza", desc: "Vitória mental, novo insight, verdade cortante e poder intelectual." },
+    { id: 51, name: "Dois de Espadas", icon: "⚔️", key: "Impasse", desc: "Indecisão, bloqueio emocional, negação e necessidade de escolha." },
+    { id: 52, name: "Três de Espadas", icon: "💔", key: "Dor", desc: "Sofrimento, separação, decepção e tristeza profunda." },
+    { id: 53, name: "Quatro de Espadas", icon: "🛌", key: "Repouso", desc: "Descanso, recuperação, meditação e pausa necessária." },
+    { id: 54, name: "Cinco de Espadas", icon: "📉", key: "Derrota", desc: "Conflito vazio, vitória a qualquer custo, perda de honra e hostilidade." },
+    { id: 55, name: "Seis de Espadas", icon: "🛶", key: "Transição", desc: "Viagem, deixar o caos para trás, busca por águas mais calmas." },
+    { id: 56, name: "Sete de Espadas", icon: "🦊", key: "Estratégia", desc: "Astúcia, fuga, agir pelas costas ou necessidade de discrição." },
+    { id: 57, name: "Oito de Espadas", icon: "🕸️", key: "Prisão", desc: "Restrição, cegueira autoimposta, sentir-se preso em pensamentos." },
+    { id: 58, name: "Nove de Espadas", icon: "😫", key: "Angústia", desc: "Pesadelos, ansiedade, preocupação excessiva e insônia." },
+    { id: 59, name: "Dez de Espadas", icon: "🗡️", key: "Finalização", desc: "Fim doloroso, traição, fundo do poço, mas possibilidade de recomeço." },
+    { id: 60, name: "Valete de Espadas", icon: "🕵️", key: "Vigilância", desc: "Curiosidade mental, espionagem, novas ideias e agilidade comunicativa." },
+    { id: 61, name: "Cavaleiro de Espadas", icon: "🌪️", key: "Ação", desc: "Pressa, impetuosidade, combate e defesa assertiva de ideias." },
+    { id: 62, name: "Rainha de Espadas", icon: "❄️", key: "Perspicácia", desc: "Independência, objetividade, clareza mental e honestidade direta." },
+    { id: 63, name: "Rei de Espadas", icon: "⚖️", key: "Intelecto", desc: "Autoridade intelectual, lógica, verdade e julgamento imparcial." },
+
+    // NAIPE DE OUROS (Pentacles) - Elemento Terra: Finanças, Trabalho, Corpo
+    { id: 64, name: "Ás de Ouros", icon: "🪙", key: "Prosperidade", desc: "Oportunidade financeira, novo emprego, saúde e estabilidade física." },
+    { id: 65, name: "Dois de Ouros", icon: "🤹", key: "Adaptabilidade", desc: "Equilíbrio de prioridades, multitarefa, mudanças financeiras e flexibilidade." },
+    { id: 66, name: "Três de Ouros", icon: "🛠️", key: "Trabalho", desc: "Colaboração, maestria, trabalho em equipe e reconhecimento técnico." },
+    { id: 67, name: "Quatro de Ouros", icon: "🔒", key: "Segurança", desc: "Possessividade, apego material, conservadorismo e medo de perda." },
+    { id: 68, name: "Cinco de Ouros", icon: "❄️", key: "Escassez", desc: "Dificuldade financeira, isolamento, perda de recursos e falta de fé." },
+    { id: 69, name: "Seis de Ouros", icon: "⚖️", key: "Generosidade", desc: "Caridade, dar e receber, equilíbrio financeiro e compartilhamento." },
+    { id: 70, name: "Sete de Ouros", icon: "🌱", key: "Paciência", desc: "Avaliação de progresso, colheita, espera e investimento a longo prazo." },
+    { id: 71, name: "Oito de Ouros", icon: "🔨", key: "Dedicação", desc: "Aperfeiçoamento, artesanato, foco no detalhe e aprendizado constante." },
+    { id: 72, name: "Nove de Ouros", icon: "🏘️", key: "Independência", desc: "Autossuficiência, luxo, colheita dos frutos e conforto material." },
+    { id: 73, name: "Dez de Ouros", icon: "🏛️", key: "Legado", desc: "Riqueza familiar, herança, tradição e estabilidade duradoura." },
+    { id: 74, name: "Valete de Ouros", icon: "📖", key: "Estudo", desc: "Novas metas financeiras, busca de conhecimento e praticidade inicial." },
+    { id: 75, name: "Cavaleiro de Ouros", icon: "🚜", key: "Rotina", desc: "Trabalho árduo, confiabilidade, cautela e progresso lento mas seguro." },
+    { id: 76, name: "Rainha de Ouros", icon: "🏡", key: "Nutrição", desc: "Praticidade, hospitalidade, cuidado com a terra e prosperidade materna." },
+    { id: 77, name: "Rei de Ouros", icon: "🏰", key: "Riqueza", desc: "Sucesso material, segurança máxima, disciplina e domínio financeiro." }
+        ];
+
+        // --- VARIÁVEIS DE ESTADO ---
+        let currentReading = [];
+
+        // --- FUNÇÕES DE MODAL ---
+        function openSetup() {
+            document.getElementById('modal-setup').classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function openHistory() {
+            renderHistory();
+            document.getElementById('modal-history').classList.add('active');
+        }
+
+        // --- LÓGICA DE EMBARALHAMENTO E TIRAGEM ---
+        function startShuffling(count) {
+            closeModal('modal-setup');
+            
+            const spreadArea = document.getElementById('spread-area');
+            const deckStack = document.getElementById('deck-stack');
+
+            // Reset visual
+            spreadArea.innerHTML = '';
+            spreadArea.classList.remove('visible');
+            deckStack.style.display = 'flex';
+            
+            // Animação de Shuffle
+            deckStack.classList.add('shuffling');
+
+            setTimeout(() => {
+                deckStack.classList.remove('shuffling');
+                deckStack.style.display = 'none'; // Esconde o deck central
+                dealCards(parseInt(count));
+            }, 1500); // 1.5s de embaralhamento
+        }
+
+        function dealCards(count) {
+            const spreadArea = document.getElementById('spread-area');
+            
+            // Lógica de sorteio
+            let deckCopy = [...tarotData];
+            deckCopy.sort(() => Math.random() - 0.5);
+            currentReading = deckCopy.slice(0, count);
+
+            // Gerar HTML das cartas
+            currentReading.forEach((card, index) => {
+                const el = document.createElement('div');
+                el.className = 'card';
+                el.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-face card-back">☾</div>
+                        <div class="card-face card-front">
+                            <div class="card-icon">${card.icon}</div>
+                            <div class="card-name">${card.name}</div>
+                            <div class="card-keyword">${card.key}</div>
+                        </div>
+                    </div>
+                `;
+                // Clique para revelar
+                el.onclick = () => revealCard(el, card, index);
+                spreadArea.appendChild(el);
+            });
+
+            // Fade in da área
+            setTimeout(() => spreadArea.classList.add('visible'), 100);
+
+            // Salvar no histórico automaticamente (como rascunho inicial)
+            saveReadingToHistory(currentReading);
+        }
+
+        function revealCard(element, card, index) {
+            if (element.classList.contains('flipped')) {
+                // Se já está virada, abre os detalhes (Pop-up)
+                showCardDetail(card);
+            } else {
+                // Vira a carta
+                element.classList.add('flipped');
+                // Pequeno delay para mostrar o pop-up automaticamente na primeira virada?
+                // O usuário pediu "pop-up para as cartas que apareceram".
+                // Vamos mostrar o detalhe automaticamente após a animação de virada (600ms)
+                setTimeout(() => {
+                    showCardDetail(card);
+                }, 700);
+            }
+        }
+
+        function showCardDetail(card) {
+            document.getElementById('view-card-name').innerText = card.name;
+            document.getElementById('view-card-icon').innerText = card.icon;
+            document.getElementById('view-card-desc').innerText = card.desc;
+            document.getElementById('modal-card').classList.add('active');
+        }
+
+        // --- SISTEMA DE HISTÓRICO E NOTAS (STORAGE) ---
+        
+        function getHistory() {
+            return JSON.parse(localStorage.getItem('arcanum_history')) || [];
+        }
+
+        function saveReadingToHistory(cards) {
+            const history = getHistory();
+            const newEntry = {
+                id: Date.now(),
+                date: new Date().toLocaleString('pt-BR'),
+                cards: cards,
+                notes: "" // Nota vazia inicialmente
+            };
+        history.unshift(newEntry); // Adiciona no topo
+            localStorage.setItem('arcanum_history', JSON.stringify(history));
+        }
+
+        function updateNote(id) {
+            const history = getHistory();
+            const noteText = document.getElementById(`note-${id}`).value;
+            
+            const index = history.findIndex(h => h.id === id);
+            if (index !== -1) {
+                history[index].notes = noteText;
+                localStorage.setItem('arcanum_history', JSON.stringify(history));
+                alert("Anotação salva com sucesso!");
+            }
+        }
+
+        function deleteEntry(id) {
+            if(confirm("Tem certeza que deseja apagar este registro?")) {
+                let history = getHistory();
+                history = history.filter(h => h.id !== id);
+                localStorage.setItem('arcanum_history', JSON.stringify(history));
+                renderHistory(); // Atualiza a lista
+            }
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            const history = getHistory();
+            
+            list.innerHTML = '';
+
+            if (history.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#666;">Nenhuma leitura gravada ainda.</p>';
+                return;
+            }
+
+            history.forEach(entry => {
+                // Criar mini visualização das cartas
+                let cardsHtml = '';
+                entry.cards.forEach(c => {
+                    cardsHtml += `<span class="mini-card" title="${c.name}">${c.icon} ${c.name}</span>`;
+                });
+
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <div class="history-header">
+                        <span>📅 ${entry.date}</span>
+                        <span>${entry.cards.length} Cartas</span>
+                    </div>
+                    <div class="history-cards">
+                        ${cardsHtml}
+                    </div>
+                    <label style="font-size:0.8rem; color:var(--gold);">Suas Anotações:</label>
+                    <textarea id="note-${entry.id}" class="note-editor" placeholder="Escreva aqui suas impressões sobre esta tiragem...">${entry.notes}</textarea>
+                    <div class="btn-group">
+                        <button class="btn-delete" onclick="deleteEntry(${entry.id})">Apagar</button>
+                        <button class="btn-save" onclick="updateNote(${entry.id})">Salvar Nota</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+    </script>
+</body>
+</html>
